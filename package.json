@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop who-tiger",
+    "pm2:restart": "pm2 restart who-tiger",
+    "pm2:logs": "pm2 logs who-tiger"
   },
   "dependencies": {
     "antd-mobile": "^5.34.0",
