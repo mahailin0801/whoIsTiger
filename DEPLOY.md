@@ -85,8 +85,8 @@ npm install --production
 
 创建 `.env.production` 文件（如果需要自定义配置）：
 ```bash
-# 端口号（可选，默认 3000）
-PORT=3000
+# 端口号（可选，默认 30000）
+PORT=30000
 
 # Node 环境
 NODE_ENV=production
@@ -120,7 +120,7 @@ module.exports = {
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 30000
     }
   }]
 };
@@ -146,7 +146,7 @@ Type=simple
 User=your-user
 WorkingDirectory=/path/to/app
 Environment=NODE_ENV=production
-Environment=PORT=3000
+Environment=PORT=30000
 ExecStart=/usr/bin/npm start
 Restart=on-failure
 
@@ -177,7 +177,7 @@ server {
     server_name your-domain.com;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:30000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -244,9 +244,9 @@ sudo yum install python3
 
 ### 2. 端口被占用
 
-如果 3000 端口被占用，可以：
-- 修改 `package.json` 中的启动脚本：`"start": "next start -p 3001"`
-- 或使用环境变量：`PORT=3001 npm start`
+如果 30000 端口被占用，可以：
+- 修改 `package.json` 中的启动脚本：`"start": "next start -p 30001"`
+- 或使用环境变量：`PORT=30001 npm start`
 
 ### 3. 数据库权限问题
 

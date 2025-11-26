@@ -12,7 +12,7 @@ module.exports = {
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: process.env.PORT || 30000,  // 支持通过环境变量设置端口
       },
       error_file: './logs/err.log',
       out_file: './logs/out.log',
