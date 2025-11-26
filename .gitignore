@@ -40,5 +40,6 @@ next-env.d.ts
 /data/*.db-journal
 
 # logs
-logs/
+logs/*.log
+!logs/README.md
 *.log

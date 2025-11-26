@@ -8,9 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:start:prod": "pm2 start pm2.config.js --env production",
     "pm2:stop": "pm2 stop who-tiger",
     "pm2:restart": "pm2 restart who-tiger",
-    "pm2:logs": "pm2 logs who-tiger"
+    "pm2:reload": "pm2 reload who-tiger",
+    "pm2:delete": "pm2 delete who-tiger",
+    "pm2:logs": "pm2 logs who-tiger",
+    "pm2:status": "pm2 status",
+    "pm2:monit": "pm2 monit"
   },
   "dependencies": {
     "antd-mobile": "^5.34.0",
