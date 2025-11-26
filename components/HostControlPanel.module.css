@@ -1,0 +1,65 @@
+.hostControlPanel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: rgba(98, 161, 152, 0.5);
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 20px rgba(205, 204, 204, 0.3);
+}
+.hostRoleInfo {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  /* border-bottom: 1px solid #e0e0e0; */
+}
+
+.roleItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.roleLabel {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.roleCount {
+  font-size: 20px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.startGameButton {
+  height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 30px;
+  line-height: 1;
+  width: 60%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.endGameButton {
+  height: 44px !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
+  border-radius: 60px !important;
+  width: 60% !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+

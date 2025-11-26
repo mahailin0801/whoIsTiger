@@ -1,0 +1,150 @@
+.voteResultOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.voteResultContainer {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.voteResultContent {
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.voteResultTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.tieMessage {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.eliminatedMessage {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ff4757;
+  margin-bottom: 24px;
+}
+
+.playersList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.eliminatedPlayer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.playerItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+}
+
+.playerAvatarWrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 8px;
+}
+
+.playerAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #667eea;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.playerNameOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 8px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.playerVotes {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.confirmButton {
+  width: 50%;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.confirmButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.confirmButton:active {
+  transform: translateY(0);
+}
