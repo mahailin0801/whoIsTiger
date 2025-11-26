@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog } from 'antd-mobile';
+import { Dialog, Toast } from 'antd-mobile';
 import { avatarImages } from '@/lib/constants';
 import styles from './PlayerCard.module.css';
 
@@ -16,6 +16,10 @@ interface PlayerCardProps {
   currentPlayerId?: string;
   isHost?: boolean;
   gameStarted?: boolean;
+  gameSettings?: {
+    civilianWord?: string;
+    undercoverWord?: string;
+  };
   onDelete?: (playerId: string) => void;
 }
 
@@ -25,6 +29,7 @@ export default function PlayerCard({
   currentPlayerId = '',
   isHost = false,
   gameStarted = false,
+  gameSettings,
   onDelete,
 }: PlayerCardProps) {
   // 为玩家随机分配头像
@@ -67,6 +72,39 @@ export default function PlayerCard({
     }
   };
 
+  const handleAvatarClick = () => {
+    // 只有当前玩家点击自己的头像时才显示词语
+    if (!isCurrentPlayer || !gameStarted || !player.gameRole) {
+      return;
+    }
+
+    let word = '';
+    let roleName = '';
+
+    switch (player.gameRole) {
+      case 'civilian':
+        word = gameSettings?.civilianWord || '';
+        roleName = '平民';
+        break;
+      case 'undercover':
+        word = gameSettings?.undercoverWord || '';
+        roleName = '卧底';
+        break;
+      case 'blank':
+        word = '空白';
+        roleName = '空白';
+        break;
+    }
+
+    if (word) {
+      Toast.show({
+        content: `${roleName}：${word}`,
+        position: 'center',
+        duration: 2000,
+      });
+    }
+  };
+
   const showDeleteButton =
     isHost &&
     !gameStarted &&
@@ -84,7 +122,8 @@ export default function PlayerCard({
             isReal ? styles.playerAvatarHighlight : ''
           } ${isCurrentPlayer ? styles.playerAvatarReal : ''} ${
             isEliminated ? styles.playerAvatarEliminated : ''
-          }`}
+          } ${isCurrentPlayer && gameStarted && player.gameRole ? styles.playerAvatarClickable : ''}`}
+          onClick={handleAvatarClick}
         />
         {isEliminated && (
           <>

@@ -45,6 +45,7 @@ export default function GamePage() {
   const [eliminationProcessed, setEliminationProcessed] = useState(false);
   const [currentPlayerEliminated, setCurrentPlayerEliminated] = useState(false);
   const [voteRoundActive, setVoteRoundActive] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false); // 当前玩家是否已投票
 
   // 随机选择一张背景图（只在客户端生成，避免 SSR 不匹配）
   const [randomBackground, setRandomBackground] = useState<string>("");
@@ -157,9 +158,15 @@ export default function GamePage() {
         const statusRes = await fetch("/api/game-status");
         const statusData = await statusRes.json();
         if (statusData.success) {
+          const newVoteRoundActive = statusData.data.voteRoundActive || false;
           setGameStarted(statusData.data.status === "playing");
           setCountdown(statusData.data.countdown);
-          setVoteRoundActive(statusData.data.voteRoundActive || false);
+          
+          // 如果投票轮被关闭，重置投票状态
+          if (voteRoundActive && !newVoteRoundActive) {
+            setHasVoted(false);
+          }
+          setVoteRoundActive(newVoteRoundActive);
         }
 
         // 获取游戏设置
@@ -200,64 +207,82 @@ export default function GamePage() {
           }
         }
 
+        // 检查当前玩家是否已投票（只在投票轮激活时检查）
+        if (gameStarted && playerInfo && !isHostPlayer(playerInfo) && voteRoundActive) {
+          try {
+            const votesRes = await fetch("/api/votes");
+            const votesData = await votesRes.json();
+            if (votesData.success && votesData.data) {
+              const hasVotedInThisRound = votesData.data.some(
+                (vote: { voterId: string }) => vote.voterId === playerInfo.id
+              );
+              setHasVoted(hasVotedInThisRound);
+            }
+          } catch (error) {
+            console.error("检查投票状态失败:", error);
+          }
+        }
+
         // 检查投票结果（游戏开始后，所有玩家包括主持人都可以看到）
+        // 规则：当所有未被淘汰的玩家（排除主持人和已淘汰的玩家）都投票后，所有玩家都可以看到投票结果
         if (gameStarted && playerInfo) {
           try {
             const voteResultRes = await fetch("/api/votes/result");
             const voteResultData = await voteResultRes.json();
             if (voteResultData.success && voteResultData.data) {
               const { allVoted, topPlayers, isTie } = voteResultData.data;
-              console.log('-=-=-=topPlayers=-=-=-=', topPlayers);
-              // 只有当所有玩家都已投票且有得票最多的玩家（得票数 > 0）时才显示结果
-              // 或者如果已经有投票结果，也要继续显示（即使 allVoted 变为 false，因为玩家被淘汰了）
-              const hasValidResult =
-                allVoted && topPlayers.length > 0 && topPlayers[0].votes > 0;
-              const hasExistingResult =
-                voteResult && topPlayers.length > 0 && topPlayers[0].votes > 0;
 
-                console.log('-=-=-=hasValidResult=-=-=-=', hasValidResult);
-                console.log('-=-=-=hasExistingResult=-=-=-=', hasExistingResult);
-              if (hasValidResult || hasExistingResult) {
-                // 检查是否需要更新投票结果（如果结果已变化或还未显示）
-                const currentTopPlayerId = voteResult?.topPlayers[0]?.id;
-                const newTopPlayerId = topPlayers[0]?.id;
-                // 对于主持人和被淘汰的玩家，如果 voteResult 为 null，应该设置
-                const shouldShow =
-                  !voteResult ||
-                  !showVoteResult ||
-                  currentTopPlayerId !== newTopPlayerId;
-                console.log('-=-=-=shouldShow=-=-=-=', shouldShow);
-                if (shouldShow) {
-                  setVoteResult({ topPlayers, isTie });
-                  setShowVoteResult(true);
+              // 当所有未被淘汰的玩家都投票后，显示投票结果（所有玩家包括主持人都可以看到）
+              // 如果已经有投票结果了，即使投票被清空（allVoted 变成 false），也应该继续显示，直到玩家确认
+              if (
+                (allVoted && topPlayers.length > 0 && topPlayers[0].votes > 0) ||
+                (voteResult && showVoteResult) // 如果已经有投票结果在显示，继续显示
+              ) {
+                // 只有当 allVoted 为 true 且有新的投票结果时，才更新投票结果
+                if (allVoted && topPlayers.length > 0 && topPlayers[0].votes > 0) {
+                  // 检查是否需要更新投票结果（如果结果已变化或还未显示）
+                  const currentTopPlayerId = voteResult?.topPlayers[0]?.id;
+                  const newTopPlayerId = topPlayers[0]?.id;
+                  const shouldUpdate =
+                    !voteResult ||
+                    !showVoteResult ||
+                    currentTopPlayerId !== newTopPlayerId ||
+                    voteResult.isTie !== isTie;
 
-                  // 如果不是平票，淘汰得票最多的玩家（只执行一次，避免重复淘汰）
-                  // 只有非主持人才能执行淘汰操作（主持人只是查看结果）
-                  if (
-                    !isTie &&
-                    topPlayers[0] &&
-                    !eliminationProcessed &&
-                    !isHostPlayer(playerInfo)
-                  ) {
-                    setEliminationProcessed(true);
-                    // 更新玩家状态为已淘汰
-                    try {
-                      const eliminateRes = await fetch(
-                        `/api/players/${topPlayers[0].id}`,
-                        {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ isEliminated: true }),
+                  if (shouldUpdate) {
+                    setVoteResult({ topPlayers, isTie });
+                    setShowVoteResult(true);
+
+                    // 如果不是平票，淘汰得票最多的玩家（只执行一次，避免重复淘汰）
+                    // 只有非主持人才能执行淘汰操作（主持人只是查看结果）
+                    if (
+                      !isTie &&
+                      topPlayers[0] &&
+                      !eliminationProcessed &&
+                      !isHostPlayer(playerInfo)
+                    ) {
+                      setEliminationProcessed(true);
+                      // 更新玩家状态为已淘汰
+                      try {
+                        const eliminateRes = await fetch(
+                          `/api/players/${topPlayers[0].id}`,
+                          {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ isEliminated: true }),
+                          }
+                        );
+                        if (!eliminateRes.ok) {
+                          setEliminationProcessed(false); // 如果失败，重置状态以便重试
                         }
-                      );
-                      if (!eliminateRes.ok) {
+                      } catch (error) {
                         setEliminationProcessed(false); // 如果失败，重置状态以便重试
                       }
-                    } catch (error) {
-                      setEliminationProcessed(false); // 如果失败，重置状态以便重试
                     }
                   }
                 }
+                // 如果已经有投票结果在显示，即使 allVoted 变成 false（投票被清空），也继续显示
+                // 这确保了所有玩家都能看到投票结果，即使某些玩家已经确认并清空了投票
               }
             }
           } catch (error) {
@@ -281,6 +306,7 @@ export default function GamePage() {
     showRoleModal,
     showVoteResult,
     eliminationProcessed,
+    voteRoundActive,
   ]);
 
   // 分配玩家到左右两列
@@ -461,6 +487,16 @@ export default function GamePage() {
   const handleVote = async (selectedPlayerId: string) => {
     if (!playerInfo) return;
 
+    // 如果已经投过票，不允许再次投票
+    if (hasVoted) {
+      Toast.show({
+        content: "您已经投过票了",
+        position: "top",
+      });
+      setShowVoteModal(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/votes", {
         method: "POST",
@@ -473,6 +509,7 @@ export default function GamePage() {
 
       const result = await response.json();
       if (result.success) {
+        setHasVoted(true); // 标记已投票
         Toast.show({
           content: "投票成功",
           position: "top",
@@ -495,12 +532,14 @@ export default function GamePage() {
 
   const handleVoteResultConfirm = async () => {
     setShowVoteResult(false);
+    setVoteResult(null); // 重置投票结果，准备下一轮
     setEliminationProcessed(false); // 重置淘汰处理状态
 
     // 如果是平票，清空投票重新开始
     if (voteResult?.isTie) {
       try {
         await fetch("/api/votes", { method: "DELETE" });
+        setHasVoted(false); // 重置投票状态，允许重新投票
         Toast.show({
           content: "请重新投票",
           position: "top",
@@ -512,6 +551,7 @@ export default function GamePage() {
       // 如果不是平票，清空投票准备下一轮
       try {
         await fetch("/api/votes", { method: "DELETE" });
+        setHasVoted(false); // 重置投票状态，准备下一轮投票
       } catch (error) {
         console.error("清空投票失败:", error);
       }
@@ -572,6 +612,7 @@ export default function GamePage() {
                   currentPlayerId={playerInfo.id}
                   isHost={isHost}
                   gameStarted={gameStarted}
+                  gameSettings={gameSettings || undefined}
                   onDelete={handleDeletePlayer}
                 />
               ))}
@@ -586,6 +627,7 @@ export default function GamePage() {
                   currentPlayerId={playerInfo.id}
                   isHost={isHost}
                   gameStarted={gameStarted}
+                  gameSettings={gameSettings || undefined}
                   onDelete={handleDeletePlayer}
                 />
               ))}
@@ -653,12 +695,13 @@ export default function GamePage() {
         undercoverWord={gameSettings?.undercoverWord}
       />
 
-      {/* 投票按钮（游戏开始后，投票轮激活，非主持人、未被淘汰的玩家显示） */}
+      {/* 投票按钮（游戏开始后，投票轮激活，非主持人、未被淘汰、未投票的玩家显示） */}
       {gameStarted &&
         voteRoundActive &&
         !isHost &&
         !countdown &&
-        !currentPlayerEliminated && (
+        !currentPlayerEliminated &&
+        !hasVoted && (
           <div className={styles.voteButtonContainer}>
             <Button
               color="primary"
@@ -682,10 +725,10 @@ export default function GamePage() {
         onCancel={() => setShowVoteModal(false)}
       />
 
-      {/* 投票结果弹窗 */}
+      {/* 投票结果弹窗 - 当所有未被淘汰的玩家都投票后，所有玩家（包括主持人）都可以看到 */}
       {voteResult && (
         <VoteResultModal
-          visible={true}
+          visible={showVoteResult}
           topPlayers={voteResult.topPlayers}
           isTie={voteResult.isTie}
           onConfirm={handleVoteResultConfirm}

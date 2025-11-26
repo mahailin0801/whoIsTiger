@@ -147,3 +147,17 @@
   pointer-events: none;
 }
 
+.playerAvatarClickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.playerAvatarClickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.8);
+}
+
+.playerAvatarClickable:active {
+  transform: scale(0.98);
+}
+
