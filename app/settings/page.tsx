@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Input, Button, Toast } from 'antd-mobile';
 import { backgroundImages, HOST_ID } from '@/lib/constants';
 import { Player, GameSettings } from '@/lib/types';
-import styles from './Settings.module.css';
+import styles from './Settings.module.scss';
 
 const isHostPlayer = (player: Player | null) => {
   return player?.role === 'host' || player?.id === HOST_ID;

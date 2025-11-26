@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "antd-mobile";
-import styles from "./RoleModal.module.css";
+import styles from "./RoleModal.module.scss";
 
 interface RoleModalProps {
   role: "civilian" | "undercover" | "blank" | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import { avatarImages } from "@/lib/constants";
-import styles from "./VoteResultModal.module.css";
+import styles from "./VoteResultModal.module.scss";
 
 interface VoteResultModalProps {
   visible: boolean;

@@ -10,7 +10,7 @@ import {
   HOST_NAME,
   generateUniqueId,
 } from "@/lib/constants";
-import styles from "./Entry.module.css";
+import styles from "./Entry.module.scss";
 
 export default function EntryPage() {
   const [name, setName] = useState("");

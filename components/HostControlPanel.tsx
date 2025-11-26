@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "antd-mobile";
-import styles from "./HostControlPanel.module.css";
+import styles from "./HostControlPanel.module.scss";
 
 interface HostControlPanelProps {
   civilianCount: number;

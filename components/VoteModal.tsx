@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from 'antd-mobile';
 import { avatarImages } from '@/lib/constants';
 import { Player } from '@/lib/types';
-import styles from './VoteModal.module.css';
+import styles from './VoteModal.module.scss';
 
 interface VoteModalProps {
   visible: boolean;

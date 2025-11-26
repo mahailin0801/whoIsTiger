@@ -9,6 +9,8 @@ import HostControlPanel from "@/components/HostControlPanel";
 import RoleModal from "@/components/RoleModal";
 import VoteModal from "@/components/VoteModal";
 import VoteResultModal from "@/components/VoteResultModal";
+import PlayerRemovedModal from "@/components/PlayerRemovedModal";
+import GameStatusOverlay from "@/components/GameStatusOverlay";
 import {
   backgroundImages,
   HOST_ID,
@@ -16,7 +18,7 @@ import {
   generateUniqueId,
 } from "@/lib/constants";
 import { Player, GameStatus, GameSettings } from "@/lib/types";
-import styles from "./Game.module.css";
+import styles from "./Game.module.scss";
 
 const isHostPlayer = (player: Player | null) => {
   return player?.role === "host" || player?.id === HOST_ID;
@@ -161,7 +163,7 @@ export default function GamePage() {
           const newVoteRoundActive = statusData.data.voteRoundActive || false;
           setGameStarted(statusData.data.status === "playing");
           setCountdown(statusData.data.countdown);
-          
+
           // 如果投票轮被关闭，重置投票状态
           if (voteRoundActive && !newVoteRoundActive) {
             setHasVoted(false);
@@ -208,7 +210,12 @@ export default function GamePage() {
         }
 
         // 检查当前玩家是否已投票（只在投票轮激活时检查）
-        if (gameStarted && playerInfo && !isHostPlayer(playerInfo) && voteRoundActive) {
+        if (
+          gameStarted &&
+          playerInfo &&
+          !isHostPlayer(playerInfo) &&
+          voteRoundActive
+        ) {
           try {
             const votesRes = await fetch("/api/votes");
             const votesData = await votesRes.json();
@@ -235,11 +242,17 @@ export default function GamePage() {
               // 当所有未被淘汰的玩家都投票后，显示投票结果（所有玩家包括主持人都可以看到）
               // 如果已经有投票结果了，即使投票被清空（allVoted 变成 false），也应该继续显示，直到玩家确认
               if (
-                (allVoted && topPlayers.length > 0 && topPlayers[0].votes > 0) ||
+                (allVoted &&
+                  topPlayers.length > 0 &&
+                  topPlayers[0].votes > 0) ||
                 (voteResult && showVoteResult) // 如果已经有投票结果在显示，继续显示
               ) {
                 // 只有当 allVoted 为 true 且有新的投票结果时，才更新投票结果
-                if (allVoted && topPlayers.length > 0 && topPlayers[0].votes > 0) {
+                if (
+                  allVoted &&
+                  topPlayers.length > 0 &&
+                  topPlayers[0].votes > 0
+                ) {
                   // 检查是否需要更新投票结果（如果结果已变化或还未显示）
                   const currentTopPlayerId = voteResult?.topPlayers[0]?.id;
                   const newTopPlayerId = topPlayers[0]?.id;
@@ -252,6 +265,20 @@ export default function GamePage() {
                   if (shouldUpdate) {
                     setVoteResult({ topPlayers, isTie });
                     setShowVoteResult(true);
+
+                    // 自动暂停投票状态
+                    if (voteRoundActive) {
+                      try {
+                        await fetch("/api/game-status", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ voteRoundActive: false }),
+                        });
+                        setVoteRoundActive(false);
+                      } catch (error) {
+                        console.error("暂停投票状态失败:", error);
+                      }
+                    }
 
                     // 如果不是平票，淘汰得票最多的玩家（只执行一次，避免重复淘汰）
                     // 只有非主持人才能执行淘汰操作（主持人只是查看结果）
@@ -444,14 +471,27 @@ export default function GamePage() {
       await fetch("/api/game/assign-roles", { method: "DELETE" });
       // 清空游戏设置
       await fetch("/api/game-settings", { method: "DELETE" });
-      // 更新游戏状态
+      // 更新游戏状态，关闭投票状态
       await fetch("/api/game-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "waiting", countdown: null }),
+        body: JSON.stringify({
+          status: "waiting",
+          countdown: null,
+          voteRoundActive: false,
+        }),
       });
       setGameStarted(false);
       setCountdown(null);
+      // 关闭投票状态
+      setVoteRoundActive(false);
+      // 重置投票相关状态
+      setHasVoted(false);
+      setShowVoteModal(false);
+      setShowVoteResult(false);
+      setVoteResult(null);
+      setEliminationProcessed(false);
+      setCurrentPlayerEliminated(false);
       // 重置角色弹窗相关状态
       setRoleModalConfirmed(false);
       setCurrentPlayerGameRole(null);
@@ -535,11 +575,20 @@ export default function GamePage() {
     setVoteResult(null); // 重置投票结果，准备下一轮
     setEliminationProcessed(false); // 重置淘汰处理状态
 
-    // 如果是平票，清空投票重新开始
+    // 如果是平票，清空投票重新开始，并重新开启投票状态
     if (voteResult?.isTie) {
       try {
         await fetch("/api/votes", { method: "DELETE" });
         setHasVoted(false); // 重置投票状态，允许重新投票
+
+        // 重新开启投票状态
+        await fetch("/api/game-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ voteRoundActive: true }),
+        });
+        setVoteRoundActive(true);
+
         Toast.show({
           content: "请重新投票",
           position: "top",
@@ -548,7 +597,7 @@ export default function GamePage() {
         console.error("清空投票失败:", error);
       }
     } else {
-      // 如果不是平票，清空投票准备下一轮
+      // 如果不是平票，清空投票准备下一轮（投票状态保持关闭，等待主持人重新开启）
       try {
         await fetch("/api/votes", { method: "DELETE" });
         setHasVoted(false); // 重置投票状态，准备下一轮投票
@@ -572,15 +621,7 @@ export default function GamePage() {
           className={styles.gameBackground}
           style={{ backgroundImage: `url(${randomBackground})` }}
         ></div>
-        <div className={styles.removedOverlay}>
-          <div className={styles.removedContent}>
-            <div className={styles.removedTitle}>您已被移出游戏</div>
-            <div className={styles.removedMessage}>请重新进入游戏</div>
-            <button className={styles.reEnterButton} onClick={handleReEnter}>
-              重新进入
-            </button>
-          </div>
-        </div>
+        <PlayerRemovedModal visible={true} onReEnter={handleReEnter} />
       </div>
     );
   }
@@ -635,40 +676,13 @@ export default function GamePage() {
           </div>
         </div>
 
-        {/* 游戏准备中/进行中提示 */}
-        {!gameStarted && !countdown && (
-          <div className={styles.gamePreparing}>
-            <div className={styles.preparingTextWrapper}>
-              <p className={styles.preparingText}>游戏准备中...</p>
-            </div>
-          </div>
-        )}
-
-        {gameStarted && !countdown && !showVoteResult && (
-          <div className={styles.gamePreparing}>
-            <div className={styles.preparingTextWrapper}>
-              <p className={styles.preparingText}>游戏进行中</p>
-            </div>
-          </div>
-        )}
-
-        {/* 投票结束提示 */}
-        {showVoteResult && (
-          <div className={styles.gamePreparing}>
-            <div className={styles.preparingTextWrapper}>
-              <p className={styles.preparingText}>投票结束</p>
-            </div>
-          </div>
-        )}
-
-        {/* 倒计时 */}
-        {countdown && (
-          <div className={styles.gameCountdown}>
-            <div className={styles.countdownTextWrapper}>
-              <p className={styles.countdownText}>{countdown}</p>
-            </div>
-          </div>
-        )}
+        {/* 游戏状态提示（准备中/进行中/投票结束/倒计时） */}
+        <GameStatusOverlay
+          isPreparing={!gameStarted && !countdown}
+          isPlaying={gameStarted && !countdown && !showVoteResult}
+          isVoteEnded={showVoteResult}
+          countdown={countdown}
+        />
       </div>
 
       {/* 主持人控制面板 */}

@@ -1,0 +1,162 @@
+.playerCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  transition: transform 0.2s ease;
+
+  .playerAvatarWrapper {
+    position: relative;
+    margin-bottom: 5px;
+  }
+
+  .playerAvatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(102, 126, 234, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    display: block;
+  }
+
+  .playerAvatarEliminated {
+    opacity: 0.5;
+  }
+
+  .playerAvatarHighlight {
+    border: 4px solid rgba(102, 126, 234, 1);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.6);
+  }
+
+  .playerAvatarReal {
+    animation: avatarPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes avatarPulse {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  .playerName {
+    font-size: 14px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .playerAvatarOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+  }
+
+  .playerOutBadge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    border: 2px solid white;
+  }
+
+  .playerRoleText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .playerDeleteButton {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ff4757;
+    color: white;
+    border: 2px solid white;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+
+  .playerDeleteButton:hover {
+    background: #ff3838;
+    transform: scale(1.1);
+  }
+
+  .playerDeleteButton:active {
+    transform: scale(0.95);
+  }
+
+  .playerRoleBadge {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    width: 50px;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    z-index: 3;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 6px;
+    border-radius: 10px;
+    pointer-events: none;
+  }
+
+  .playerAvatarClickable {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .playerAvatarClickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.8);
+  }
+
+  .playerAvatarClickable:active {
+    transform: scale(0.98);
+  }
+}
+
+.playerCard:active {
+  transform: scale(0.95);
+}

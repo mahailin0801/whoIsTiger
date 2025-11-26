@@ -1,6 +1,6 @@
 'use client';
 
-import styles from './GameHeader.module.css';
+import styles from './GameHeader.module.scss';
 
 interface GameHeaderProps {
   isHost: boolean;

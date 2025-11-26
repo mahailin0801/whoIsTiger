@@ -2,7 +2,7 @@
 
 import { Dialog, Toast } from 'antd-mobile';
 import { avatarImages } from '@/lib/constants';
-import styles from './PlayerCard.module.css';
+import styles from './PlayerCard.module.scss';
 
 interface PlayerCardProps {
   player: {
